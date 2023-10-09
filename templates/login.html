@@ -34,21 +34,30 @@
 						<!-- Panel (Spotlight) -->
 							<section class="panel spotlight small" id="first">
 								<div class="content span-12">
-									<h2 class="major">Users</h2>
-									<ul class="actions">
-<!--							Wyświetlenie określonych parametrów, tylko dla zalogowanych użytkowników-->
-									{% if not current_user.is_authenticated: %}
-										<li><a href="{{ url_for('login') }}" class="button primary color2">Login</a></li>
-										<li><a href="{{ url_for('register') }}" class="button">Register</a></li>
-									{% else: %}
-										<li><a href="{{ url_for('logout') }}" class="button primary color2">Logout</a></li>
-									{% endif %}
-									</ul>
+									<h2 class="major">Login</h2>
+                                        <form method="post" action="{{ url_for('login') }}">
+											<div class="fields">
+												<div class="field">
+													<label for="email">Email</label>
+													<input type="email" name="email" id="email" value="">
+												</div>
+												<div class="field">
+													<label for="password">Password</label>
+													<input type="password" name="password" id="password" value="">
+												</div>
+											</div>
+												<ul class="actions">
+													<li><input type="submit" value="Login" class="primary color2"></li>
+													<li><input type="reset" value="Reset"></li>
+												</ul>
+										</form>
 								</div>
 								<div class="image filtered tinted" data-position="top left">
 									<img src="static/images/pic02.jpg" alt="" />
 								</div>
 							</section>
+
+
 
 						<!-- Panel -->
 							<section class="panel color2-alt">
