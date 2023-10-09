@@ -99,6 +99,7 @@ def home():
         task_data = request.form
 
         new_task = Task(
+            author_id = current_user,
             text=task_data["text"],
         )
 
@@ -112,8 +113,9 @@ def home():
         result = db.session.execute(db.select(Task).where(Task.author_id == None))
     finally:
         tasks = result.scalars().all()
+        numbered_tasks = [(index + 1, task) for index, task in enumerate(tasks)]
 
-    return render_template("index.html", all_tasks=tasks, current_user=current_user)
+    return render_template("index.html", all_tasks=numbered_tasks, current_user=current_user)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -141,7 +143,11 @@ def login():
 
             db.session.commit()
             return redirect(url_for('home'))
-    return render_template("login.html", current_user=current_user)
+
+    result = db.session.execute(db.select(Task).where(Task.author_id == None))
+    tasks = result.scalars().all()
+    numbered_tasks = [(index + 1, task) for index, task in enumerate(tasks)]
+    return render_template("login.html", current_user=current_user, all_tasks=numbered_tasks)
 
 
 @app.route('/logout')
@@ -186,7 +192,20 @@ def register():
 
         db.session.commit()
         return redirect(url_for("home"))
-    return render_template("register.html", current_user=current_user)
+
+    result = db.session.execute(db.select(Task).where(Task.author_id == None))
+    tasks = result.scalars().all()
+    numbered_tasks = [(index + 1, task) for index, task in enumerate(tasks)]
+    return render_template("register.html", current_user=current_user, all_tasks=numbered_tasks)
+
+
+# Use a decorator so only an admin user can delete a post
+@app.route("/delete/<int:task_id>")
+def delete_task(task_id):
+    post_to_delete = db.get_or_404(Task, task_id)
+    db.session.delete(post_to_delete)
+    db.session.commit()
+    return redirect(url_for('home'))
 
 
 
