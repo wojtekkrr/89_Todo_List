@@ -65,6 +65,18 @@
 									</div>
 								</div>
 							</section>
+				<!-- Panel (Spotlight) -->
+							{% for task in all_tasks %}
+								<section class="panel spotlight small">
+									<div class="content span-5">
+										<h3 class="major">{{ task.id }}</h3>
+										<p>{{ task.text }}</p>
+									</div>
+									<div class="image filtered tinted" data-position="top left">
+									<img src="static/images/pic02.jpg" alt="" />
+								</div>
+								</section>
+							{% endfor %}
 
 						<!-- Copyright -->
 							<div class="copyright">&copy; Wojciech Rajczak. Design: <a href="https://html5up.net">HTML5 UP</a>.</div>
