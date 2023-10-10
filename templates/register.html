@@ -28,9 +28,13 @@
 									<ul class="actions">
 										<li><a href="#first" class="button primary color1 circle icon solid fa-angle-right">Next</a></li>
 									</ul>
+									<ul class="actions">
+										<li><a href="{{ url_for('home') }}" class="button primary color2">Home</a></li>
+									</ul>
 								</div>
 							</section>
 
+<!--						Rejestracja użytkownika-->
 						<!-- Panel (Spotlight) -->
 							<section class="panel spotlight small" id="first">
 								<div class="content span-12">
@@ -57,12 +61,11 @@
 										</form>
 								</div>
 								<div class="image filtered tinted" data-position="top left">
-									<img src="static/images/pic02.jpg" alt="" />
+									<img src="static/images/pic01.jpg" alt="" />
 								</div>
 							</section>
 
-
-
+<!--						Dodawanie nowych zadań-->
 						<!-- Panel -->
 							<section class="panel color2-alt">
 								<div class="inner columns aligned">
@@ -83,6 +86,8 @@
 									</div>
 								</div>
 							</section>
+
+						<!--						Wyświetlanie zadań-->
 				<!-- Panel (Spotlight) -->
 							{% for number, task in all_tasks %}
 								<section class="panel spotlight small left">

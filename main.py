@@ -12,6 +12,7 @@ app.config['SECRET_KEY'] = 'Flask_Key'
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.get_or_404(User, user_id)
@@ -34,8 +35,7 @@ class Task(db.Model):
     text = db.Column(db.String(250), nullable=False)
 
 
-
-# User table for all your registered users
+# User table for all registered users
 class User(UserMixin, db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
@@ -49,22 +49,6 @@ class User(UserMixin, db.Model):
 
 with app.app_context():
     db.create_all()
-
-
-# Create an admin-only decorator
-def admin_only(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        # If id is not 1 then return abort with 403 error
-        try:
-            if current_user.id != 1:
-                return abort(403)
-        except AttributeError:
-            return abort(403)
-        # Otherwise continue with the route function
-        return f(*args, **kwargs)
-
-    return decorated_function
 
 
 # Create an registered-user-only decorator
@@ -95,31 +79,40 @@ def unregistered_user_only(f):
 
 @app.route("/", methods=["GET", "POST"])
 def home():
+    # Dodawanie nowych zadań do listy
     if request.method == "POST":
         task_data = request.form
 
-        new_task = Task(
-            author_id = current_user,
-            text=task_data["text"],
-        )
+        # Wstawianie różnych danych do bazy, w zależności od tego czy uzytkownik jest zalogowany
+        if current_user is None:
+            new_task = Task(
+                author_id=current_user,
+                text=task_data["text"],
+            )
+        else:
+            new_task = Task(
+                text=task_data["text"],
+            )
 
         db.session.add(new_task)
         db.session.commit()
         return redirect(url_for("home"))
 
+    # Obsługa błędów, w przypadku, gdy użytkownik nie jest zalogowany
     try:
         result = db.session.execute(db.select(Task).where(Task.author_id == current_user.id))
     except AttributeError:
-        result = db.session.execute(db.select(Task).where(Task.author_id == None))
+        result = db.session.execute(db.select(Task).where(Task.author_id is None))
     finally:
         tasks = result.scalars().all()
+        # Numeracja zadań i ich wyświetlenie
         numbered_tasks = [(index + 1, task) for index, task in enumerate(tasks)]
 
     return render_template("index.html", all_tasks=numbered_tasks, current_user=current_user)
 
 
 @app.route("/login", methods=["GET", "POST"])
-# @unregistered_user_only
+@unregistered_user_only
 def login():
     if request.method == "POST":
         login_data = request.form
@@ -136,6 +129,7 @@ def login():
         else:
             login_user(user)
 
+            # Przypisanie zadania do użytkownika przy logowaniu
             tasks = db.session.query(Task).filter(Task.author_id.is_(None)).all()
 
             for task in tasks:
@@ -144,8 +138,10 @@ def login():
             db.session.commit()
             return redirect(url_for('home'))
 
-    result = db.session.execute(db.select(Task).where(Task.author_id == None))
+    # Wyświetlenie zadań, które nie są przypisane do użytkownika
+    result = db.session.execute(db.select(Task).where(Task.author_id is None))
     tasks = result.scalars().all()
+    # Numeracja zadań
     numbered_tasks = [(index + 1, task) for index, task in enumerate(tasks)]
     return render_template("login.html", current_user=current_user, all_tasks=numbered_tasks)
 
@@ -158,7 +154,7 @@ def logout():
 
 
 @app.route("/register", methods=["GET", "POST"])
-# @unregistered_user_only
+@unregistered_user_only
 def register():
     if request.method == "POST":
         data = request.form
@@ -170,7 +166,7 @@ def register():
             flash("You've already signed up with that email, log in instead!")
             return redirect(url_for('login'))
 
-        #Securing the password
+        # Securing the password
         hash_and_salted_password = generate_password_hash(
             data["password"],
             method='pbkdf2:sha256',
@@ -185,6 +181,7 @@ def register():
         db.session.commit()
         login_user(new_user)
 
+        # Przypisanie zadania do użytkownika przy rejestracji
         tasks = db.session.query(Task).filter(Task.author_id.is_(None)).all()
 
         for task in tasks:
@@ -193,22 +190,20 @@ def register():
         db.session.commit()
         return redirect(url_for("home"))
 
-    result = db.session.execute(db.select(Task).where(Task.author_id == None))
+    # Wyświetlenie zadań nie przypisanych do uzytkowników
+    result = db.session.execute(db.select(Task).where(Task.author_id is None))
     tasks = result.scalars().all()
+    # Numeracja zadań
     numbered_tasks = [(index + 1, task) for index, task in enumerate(tasks)]
     return render_template("register.html", current_user=current_user, all_tasks=numbered_tasks)
 
 
-# Use a decorator so only an admin user can delete a post
 @app.route("/delete/<int:task_id>")
 def delete_task(task_id):
     post_to_delete = db.get_or_404(Task, task_id)
     db.session.delete(post_to_delete)
     db.session.commit()
     return redirect(url_for('home'))
-
-
-
 
 
 if __name__ == "__main__":
